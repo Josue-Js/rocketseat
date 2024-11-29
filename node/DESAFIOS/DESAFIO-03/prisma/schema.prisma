@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Org {
+  id                         String   @id @unique @default(uuid())
+  email                      String   @unique
+  name_of_person_responsible String
+  city                       String
+  state                      String
+  zip_code                   String
+  street                     String
+  phone                      String
+  password_hash              String
+  created_at                 DateTime @default(now())
+  updated_at                 DateTime @updatedAt
+
+  Pet Pet[]
+}
+
+enum Age {
+  PUPPY
+  YOUNG
+  ADULT
+}
+
+enum Size {
+  SHORT
+  MEDIUM_SIZED
+  TALL
+}
+
+enum Environment {
+  LITTLE
+  MEDIUM
+  LARGE
+}
+
+enum Energia {
+  LAZY
+  LOW
+  MEDIUM
+  VERY_HIGH
+}
+
+enum Independence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Pet {
+  id                    String       @id @unique @default(uuid())
+  name                  String
+  about                 String?
+  age                   Age
+  size                  Size
+  energia               Energia
+  level_of_independence Independence
+  environment           Environment
+  requirements          String[]     @default([])
+  created_at            DateTime     @default(now())
+
+  org    Org      @relation(fields: [org_id], references: [id])
+  org_id String
+  photos photos[]
+
+  @@map("pets")
+}
+
+model photos {
+  id  String @id @unique @default(uuid())
+  url String
+
+  pet    Pet    @relation(fields: [pet_id], references: [id])
+  pet_id String
+}

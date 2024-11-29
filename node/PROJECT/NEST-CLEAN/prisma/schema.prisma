@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+}
+
+model User {
+  id            String @id @default(uuid())
+  name          String
+  email         String @unique
+  password_hash String
+  role          Role   @default(STUDENT)
+
+  questions     Question[]
+  answers       Answer[]
+  comments      Comment[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Question {
+  id             String    @id @default(uuid())
+  title          String
+  slug           String    @unique
+  content        String
+  created_at     DateTime  @default(now())
+  updated_at     DateTime? @updatedAt
+  author_id      String
+  best_answer_id String?   @unique
+
+  author      User         @relation(fields: [author_id], references: [id])
+  bestAnswer  Answer?      @relation("bestAnswer", fields: [best_answer_id], references: [id])
+  answers     Answer[]
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@map("questions")
+}
+
+model Answer {
+  id          String    @id @default(uuid())
+  content     String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime? @updatedAt
+  author_id   String
+  question_id String
+
+  author       User         @relation(fields: [author_id], references: [id])
+  bestAnswerOn Question?    @relation("bestAnswer")
+  question     Question?    @relation(fields: [question_id], references: [id])
+  comments     Comment[]
+  attachments  Attachment[]
+
+  @@map("answers")
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  content     String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime? @updatedAt
+  author_id   String
+  answer_id   String?
+  question_id String?
+
+  author   User      @relation(fields: [author_id], references: [id])
+  answer   Answer?   @relation(fields: [answer_id], references: [id])
+  question Question? @relation(fields: [question_id], references: [id])
+
+  @@map("comments")
+}
+
+model Attachment {
+  id          String  @id @default(uuid())
+  title       String
+  url         String
+  answer_id   String?
+  question_id String?
+
+  answer   Answer?   @relation(fields: [answer_id], references: [id])
+  question Question? @relation(fields: [question_id], references: [id])
+
+  @@map("attachments")
+}
+
+model Notification {
+  id           String    @id @default(uuid())
+  recipient_id String
+  title        String
+  content      String
+  read_at      DateTime?
+  created_at   DateTime  @default(now())
+
+  recipient User @relation(fields: [recipient_id], references: [id])
+
+  @@map("notifications")
+}
